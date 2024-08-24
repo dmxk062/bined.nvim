@@ -48,20 +48,19 @@ local function draw_buffer(target_bufnum, data, base, elems_per_line)
                 table.insert(lines, cur_line)
                 table.insert(hl_groups, cur_hl)
             end
-            cur_hl   = { { "BinedAddress", 0, 9 } }
+            cur_hl   = {}
             cur_line = string.format("%08X:", i)
         end
         local oldlen = #cur_line
         if bytes_as_chars[i + 1] then
             cur_line = cur_line .. (i % baseinfo.group == 0 and " " or "") .. bytes_as_chars[i + 1]
         end
-        if data.bytes[i] == 0 then
-            table.insert(cur_hl, { "BinedNull", oldlen, #cur_line })
-        elseif data.bytes[i] >= 32 and data.bytes[i] < 127 then
+        -- highlight ascii characters
+        if data.bytes[i] >= 32 and data.bytes[i] < 127 then
             table.insert(cur_hl, { "BinedString", oldlen, #cur_line })
         end
     end
-    if #cur_line > 1 then
+    if #cur_line > #"00000000: " then
         table.insert(lines, cur_line)
         table.insert(hl_groups, cur_hl)
     end
@@ -233,7 +232,7 @@ function M.attach_to_or_upd_buffer(bufnum, winnum, base)
         local info = bufinfos[bufnum]
         info.base = base
         update_width(bufnum)
-        vim.schedule(function() redraw_edit_buffer(bufnum) end)
+        redraw_edit_buffer(bufnum)
     else
         local edit_buf = vim.api.nvim_create_buf(true, false)
         local edit_win = vim.api.nvim_open_win(edit_buf, true, { win = winnum, split = "left" })
@@ -253,6 +252,7 @@ function M.attach_to_or_upd_buffer(bufnum, winnum, base)
 
         vim.wo[edit_win].cursorlineopt = "both"
         vim.bo[edit_buf].buftype = "acwrite"
+        vim.bo[edit_buf].filetype = "bined"
         vim.api.nvim_buf_set_name(edit_buf, "bined://" .. vim.api.nvim_buf_get_name(bufnum))
         update_width(edit_buf)
 
@@ -261,7 +261,7 @@ function M.attach_to_or_upd_buffer(bufnum, winnum, base)
             buffer = edit_buf,
             callback = function(args)
                 update_width(edit_buf)
-                vim.schedule(function() redraw_edit_buffer(edit_buf) end)
+                redraw_edit_buffer(edit_buf)
             end
         })
 
@@ -306,7 +306,7 @@ function M.attach_to_or_upd_buffer(bufnum, winnum, base)
                 mirror_cursor_movement(edit_buf)
             end
         })
-        vim.schedule(function() redraw_edit_buffer(edit_buf) end)
+        redraw_edit_buffer(edit_buf)
     end
 end
 
