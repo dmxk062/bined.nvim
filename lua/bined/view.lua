@@ -172,9 +172,32 @@ local function write_to_bin(bufnum)
     return true
 end
 
+local function get_pos_in_line(col, info)
+    local off = 10
+    local rel = col - off
+    if rel < 0 then
+        return 0
+    end
+
+    local discr
+    if info.group == 1 then
+        discr = 0.8
+    else
+        discr = 0.7
+    end
+    local pos = rel / info.word_size
+    local rem = pos % 1
+    if rem >= discr then
+        return math.ceil(pos)
+    else
+        return math.floor(pos)
+    end
+end
+
 local function mirror_cursor_movement(bufnum)
     local info = bufinfos[bufnum]
     local data = info.cached_data
+    local baseinfo = parser.base_data[info.base]
     if not data then
         return
     end
@@ -183,9 +206,14 @@ local function mirror_cursor_movement(bufnum)
     local b_start = row * info.elems_per_line
     local b_end = (b_start + info.elems_per_line)
 
+    local b_on = get_pos_in_line(col, baseinfo)
+    local b_pos = b_start + b_on
+    print(b_on, b_pos)
+
     local found_closing = false
     local found_opening = false
 
+    local char_to_hl = {}
     local lines_to_hl = {}
     for i, line in ipairs(data.line_starts) do
         local l_start = line[1]
@@ -194,6 +222,9 @@ local function mirror_cursor_movement(bufnum)
         local r_start = b_start - l_start
         local r_end   = b_end - l_start
 
+        if b_pos >= l_start and b_pos <= l_end then
+            char_to_hl = { i - 1, b_pos - l_start }
+        end
         -- all the highlights are in a single line
         if b_start >= l_start and b_start <= l_end and b_end <= l_end and b_end >= l_start then
             lines_to_hl = { { i - 1, r_start, r_end } }
@@ -220,8 +251,10 @@ local function mirror_cursor_movement(bufnum)
     -- focus the relevant region
     vim.api.nvim_win_set_cursor(info.winnum, { lines_to_hl[1][1] + 1, lines_to_hl[1][2] })
     for _, hl in pairs(lines_to_hl) do
-        vim.api.nvim_buf_add_highlight(info.bufnum, hlnamespace, "BinedContext", hl[1], hl[2], hl[3])
+        vim.api.nvim_buf_add_highlight(info.bufnum, hlnamespace, "BinedCurrentLine", hl[1], hl[2], hl[3])
     end
+    vim.api.nvim_buf_add_highlight(info.bufnum, hlnamespace, "BinedCurrentChar", char_to_hl[1], char_to_hl[2],
+        char_to_hl[2] + 1)
 end
 
 ---@param bufnum integer

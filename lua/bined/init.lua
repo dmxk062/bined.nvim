@@ -10,7 +10,8 @@ function M.setup(opts)
         BinedString = {link = "String"},
         BinedNull   = {link = "Folded"},
         BinedAddress= {link = "Label"},
-        BinedContext= {link = "Cursorline"},
+        BinedCurrentLine= {link = "Cursorline"},
+        BinedCurrentChar= {link = "Substitute"},
     }
     for name, hl in pairs(hl_groups) do
         vim.api.nvim_set_hl(0, name, {link = hl.link, default = true})
