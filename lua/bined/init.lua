@@ -4,7 +4,18 @@ local view = require("bined.view")
 
 
 
-function M.setup()
+function M.setup(opts)
+    opts = opts or {}
+    local hl_groups = {
+        BinedString = {link = "String"},
+        BinedNull   = {link = "Folded"},
+        BinedAddress= {link = "Label"},
+        BinedContext= {link = "Cursorline"},
+    }
+    for name, hl in pairs(hl_groups) do
+        vim.api.nvim_set_hl(0, name, {link = hl.link, default = true})
+    end
+
     vim.api.nvim_create_user_command("Bined", function(args)
         local base = args.args == "" and "hex" or args.args
         if base ~= "hex" and base ~= "oct" and base ~= "bin" then
