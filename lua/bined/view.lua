@@ -248,7 +248,7 @@ local function mirror_cursor_movement(bufnum)
     end
 
     -- focus the relevant region
-    vim.api.nvim_win_set_cursor(info.winnum, { lines_to_hl[1][1] + 1, lines_to_hl[1][2] })
+    vim.api.nvim_win_set_cursor(info.winnum, {char_to_hl[1]+1, char_to_hl[2]})
     for _, hl in pairs(lines_to_hl) do
         vim.api.nvim_buf_add_highlight(info.bufnum, hlnamespace, "BinedCurrentLine", hl[1], hl[2], hl[3])
     end
