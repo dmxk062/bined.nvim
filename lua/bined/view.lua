@@ -208,7 +208,6 @@ local function mirror_cursor_movement(bufnum)
 
     local b_on = get_pos_in_line(col, baseinfo)
     local b_pos = b_start + b_on
-    print(b_on, b_pos)
 
     local found_closing = false
     local found_opening = false
