@@ -25,6 +25,7 @@ local hlnamespace = vim.api.nvim_create_namespace("BinedHighlight")
 ---@param elems_per_line integer
 local function draw_buffer(target_bufnum, data, base, elems_per_line)
     local baseinfo = parser.base_data[base]
+
     -- if its cached already, use that
     local string_repr = data[base]
     if not string_repr then
@@ -40,6 +41,7 @@ local function draw_buffer(target_bufnum, data, base, elems_per_line)
     local cur_line = ""
     local cur_hl = {}
     local hl_groups = {}
+
     for i = 0, #bytes_as_chars do
         if i % elems_per_line == 0 then
             if #cur_line > 0 then
@@ -143,6 +145,7 @@ local function write_to_bin(bufnum)
 
 
             if (data.base == "hex" or data.base == "oct") and (num > 0xFF or vim.startswith(field, "00")) then
+                ---@FIXME: right now this is little-endian specific
                 local high = bit.rshift(num, 8)
                 local low = bit.band(num, 0xFF)
                 bytes[index] = high
@@ -210,7 +213,7 @@ local function mirror_cursor_movement(bufnum)
         end
     end
 
-    vim.api.nvim_buf_clear_namespace(bufnum, hlnamespace, 0, -1)
+    vim.api.nvim_buf_clear_namespace(info.bufnum, hlnamespace, 0, -1)
     if #lines_to_hl < 1 then
         return
     end
@@ -218,7 +221,7 @@ local function mirror_cursor_movement(bufnum)
     -- focus the relevant region
     vim.api.nvim_win_set_cursor(info.winnum, { lines_to_hl[1][1] + 1, lines_to_hl[1][2] })
     for _, hl in pairs(lines_to_hl) do
-        vim.api.nvim_buf_add_highlight(bufnum, hlnamespace, "BinedContext", hl[1], hl[2], hl[3])
+        vim.api.nvim_buf_add_highlight(info.bufnum, hlnamespace, "BinedContext", hl[1], hl[2], hl[3])
     end
 end
 
@@ -250,7 +253,7 @@ function M.attach_to_or_upd_buffer(bufnum, winnum, base)
 
         vim.wo[edit_win].cursorlineopt = "both"
         vim.bo[edit_buf].buftype = "acwrite"
-        vim.api.nvim_buf_set_name(edit_buf, "bined:// " .. vim.api.nvim_buf_get_name(bufnum))
+        vim.api.nvim_buf_set_name(edit_buf, "bined://" .. vim.api.nvim_buf_get_name(bufnum))
         update_width(edit_buf)
 
         vim.api.nvim_create_autocmd("WinResized", {
