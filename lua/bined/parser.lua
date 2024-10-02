@@ -21,6 +21,7 @@ function M.create_buffer(size, data)
     else
         ffi.fill(buf, size, 0)
     end
+    
     return ffi.cast("uint8_t*", buf)
 end
 
@@ -45,7 +46,7 @@ function M.buffer_to_repr(bufnum)
         table.insert(starts, { offset, off})
         offset = off
     end
-    local joined = table.concat(lines, "\n")
+    local joined = table.concat(lines, "\n") .. (vim.bo[bufnum].endofline and "\n" or "")
     local num_bytes = #joined
     local bytes = M.create_buffer(num_bytes, joined)
 

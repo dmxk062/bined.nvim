@@ -56,8 +56,13 @@ local function draw_buffer(target_bufnum, data, base, elems_per_line)
             cur_line = cur_line .. (i % baseinfo.group == 0 and " " or "") .. bytes_as_chars[i + 1]
         end
         -- highlight ascii characters
-        if data.bytes[i] >= 32 and data.bytes[i] < 127 then
+        local byte = tonumber(data.bytes[i])
+        if byte >= 32 and byte < 127 then
             table.insert(cur_hl, { "BinedString", oldlen, #cur_line })
+        elseif byte == 0 then
+            table.insert(cur_hl, { "BinedNull", oldlen, #cur_line })
+        elseif byte == 0x0A or byte == 0x0D then
+            table.insert(cur_hl, { "BinedNewline", oldlen, #cur_line })
         end
     end
     if #cur_line > #"00000000: " then
@@ -68,7 +73,7 @@ local function draw_buffer(target_bufnum, data, base, elems_per_line)
     vim.api.nvim_buf_set_lines(target_bufnum, 0, -1, false, lines)
     vim.api.nvim_buf_clear_namespace(target_bufnum, hlnamespace, 0, -1)
     for i, line in ipairs(hl_groups) do
-        for _, hl in pairs(line) do
+        for _, hl in ipairs(line) do
             vim.api.nvim_buf_add_highlight(target_bufnum, hlnamespace, hl[1], i - 1, hl[2], hl[3])
         end
     end
@@ -248,7 +253,7 @@ local function mirror_cursor_movement(bufnum)
     end
 
     -- focus the relevant region
-    vim.api.nvim_win_set_cursor(info.winnum, {char_to_hl[1]+1, char_to_hl[2]})
+    vim.api.nvim_win_set_cursor(info.winnum, { char_to_hl[1] + 1, char_to_hl[2] })
     for _, hl in pairs(lines_to_hl) do
         vim.api.nvim_buf_add_highlight(info.bufnum, hlnamespace, "BinedCurrentLine", hl[1], hl[2], hl[3])
     end

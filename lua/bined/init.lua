@@ -7,14 +7,15 @@ local view = require("bined.view")
 function M.setup(opts)
     opts = opts or {}
     local hl_groups = {
-        BinedString = {link = "String"},
-        BinedNull   = {link = "Folded"},
-        BinedAddress= {link = "Label"},
-        BinedCurrentLine= {link = "Cursorline"},
-        BinedCurrentChar= {link = "Substitute"},
+        BinedString      = { link = "String" },
+        BinedNull        = { link = "Folded" },
+        BinedNewline     = { link = "SpecialChar" },
+        BinedAddress     = { link = "Label" },
+        BinedCurrentLine = { link = "Cursorline" },
+        BinedCurrentChar = { link = "Substitute" },
     }
     for name, hl in pairs(hl_groups) do
-        vim.api.nvim_set_hl(0, name, {link = hl.link, default = true})
+        vim.api.nvim_set_hl(0, name, { link = hl.link, default = true })
     end
 
     vim.api.nvim_create_user_command("Bined", function(args)
